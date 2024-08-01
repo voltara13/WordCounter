@@ -13,12 +13,18 @@ GridLayout {
         text: qsTr("Open")
     }
     AppButton {
+        onClicked: wordCounterController.start()
+        enabled: wordCounterController.isCanceled || wordCounterController.isPaused
         text: qsTr("Start")
     }
     AppButton {
+        onClicked: wordCounterController.pause()
+        enabled: !wordCounterController.isCanceled && !wordCounterController.isPaused
         text: qsTr("Pause")
     }
     AppButton {
+        onClicked: wordCounterController.abort()
+        enabled: !wordCounterController.isCanceled
         text: qsTr("Abort")
     }
 }

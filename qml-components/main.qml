@@ -14,11 +14,22 @@ ApplicationWindow {
     title: "Word Frequency Analyzer"
     visible: true
 
-    footer: ProgressBar {
-        id: progressBar
+    footer: Item {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: 20
 
-        indeterminate: true
-        visible: true
+        ProgressBar {
+            id: progressBar
+
+            anchors.fill: parent
+
+            from: 0
+            to: 100
+
+            value: wordCounterController.progress
+            visible: !wordCounterController.isCanceled
+        }
     }
 
     AppView {
