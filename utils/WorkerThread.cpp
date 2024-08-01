@@ -52,6 +52,7 @@ void WorkerThread::run()
       block = leftover + block;
       leftover.clear();
 
+      // Check if the word in the block has been cut off
       int lastValidPos = block.lastIndexOf(QRegularExpression("\\W"));
       if (lastValidPos != -1 && lastValidPos != block.size() - 1) {
         leftover = block.mid(lastValidPos + 1);

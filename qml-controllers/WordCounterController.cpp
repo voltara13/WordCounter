@@ -4,9 +4,7 @@
 
 #include <QMessageBox>
 
-WordCounterController::WordCounterController(QObject* ipParent) : QObject(ipParent)
-{
-}
+WordCounterController::WordCounterController(QObject* ipParent) : QObject(ipParent) {}
 
 WordCounterController::~WordCounterController()
 {
@@ -80,6 +78,7 @@ void WordCounterController::SetIsCanceled(bool iNewIsCanceled)
   }
   else {
     if (!(_workerThread && _workerThread->isRunning())) {
+      // Creating a worker. If the file could not be opened, the worker will not be created
       try {
         _workerThread = new WorkerThread(_filePath.toLocalFile(), this);
       }
