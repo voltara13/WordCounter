@@ -14,6 +14,12 @@ ApplicationWindow {
     title: "Word Frequency Analyzer"
     visible: true
 
+    header: TextArea {
+        text: wordCounterController.filePath
+        readOnly: true
+        wrapMode: TextEdit.WordWrap
+    }
+
     footer: Item {
         anchors.left: parent.left
         anchors.right: parent.right

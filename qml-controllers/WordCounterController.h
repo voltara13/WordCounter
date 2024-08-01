@@ -37,6 +37,7 @@ private:
   void SetIsCanceled(bool iNewIsCanceled);
   void SetIsPaused(bool iNewIsPaused);
   void SetProgress(qreal iNewProgress);
+  void SetWordsCount(const QMap<QString, int>& iWordsCount);
 
   QPointer<WorkerThread> _workerThread;
   QUrl _filePath;

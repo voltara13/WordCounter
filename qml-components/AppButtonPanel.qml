@@ -14,7 +14,7 @@ GridLayout {
     }
     AppButton {
         onClicked: wordCounterController.start()
-        enabled: wordCounterController.isCanceled || wordCounterController.isPaused
+        enabled: wordCounterController.filePath != "" && (wordCounterController.isCanceled || wordCounterController.isPaused)
         text: qsTr("Start")
     }
     AppButton {
