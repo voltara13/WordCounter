@@ -4,6 +4,9 @@
 #include <QTextStream>
 #include <QRegularExpression>
 #include <QException>
+#include <QThreadPool>
+#include <QFuture>
+#include <QtConcurrent>
 
 WorkerThread::WorkerThread(const QString& iFilePath, QObject* ipParent) : QThread(ipParent)
 {
@@ -32,34 +35,70 @@ void WorkerThread::SetIsPaused(bool iNewIsPaused)
 
 void WorkerThread::run()
 {
-  try {
-    QTextStream in(&_file);
+  QTextStream in(&_file);
+  in.setEncoding(QStringConverter::Encoding::Utf8);
+  const auto fileSize = _file.size();
 
-    while (!isInterruptionRequested()) {
-      QMap<QString, int> wordsCounts;
+  QThreadPool pool;
+  pool.setMaxThreadCount(QThread::idealThreadCount());
 
-      while (!in.atEnd() && !isInterruptionRequested()) {
-        const auto size = _file.size();
-        const auto line = in.readLine();
-        const auto words = line.split(QRegularExpression("\\W+"), Qt::SkipEmptyParts);
+  while (!isInterruptionRequested()) {
+    QString leftover;
+    QVariantMap wordsCounts;
+    QList<QFuture<QVariantMap>> futures;
 
-        for (const QString& word : words)
-          wordsCounts[word.toLower()]++;
+    while (!in.atEnd() && !isInterruptionRequested()) {
+      auto block = in.read(qMin(fileSize, 1024 * 1024));
+      block = leftover + block;
+      leftover.clear();
 
-        if (size > 0)
-          emit progressChanged(in.pos() * 100.0 / size);
-        else
-          emit progressChanged(0.0);
+      int lastValidPos = block.lastIndexOf(QRegularExpression("\\W"));
+      if (lastValidPos != -1 && lastValidPos != block.size() - 1) {
+        leftover = block.mid(lastValidPos + 1);
+        block = block.left(lastValidPos + 1);
+      }
+
+      auto future = QtConcurrent::run(&pool, [block, this]() -> QVariantMap {
+        if (isInterruptionRequested())
+          return {};
 
         QMutexLocker pauseLocker(&_pauseMutex);
         if (_isPaused)
           _pauseCondition.wait(&_pauseMutex);
-      }
 
-      _file.seek(0);
+        QVariantMap localCounts;
+        const auto lines = block.split(QRegularExpression("[\\r\\n]"), Qt::SkipEmptyParts);
+        for (const auto& line : lines) {
+          const auto words = line.split(QRegularExpression("\\W+"), Qt::SkipEmptyParts);
+          for (const auto& word : words) {
+            if (localCounts.contains(word.toLower()))
+              localCounts[word.toLower()] = localCounts[word.toLower()].toInt() + 1;
+            else
+              localCounts[word.toLower()] = 1;
+          }
+        }
 
-      emit wordsCountsReady(wordsCounts);
+        return localCounts;
+        });
+
+      futures.append(future);
     }
+
+    for (auto& future : futures) {
+      future.waitForFinished();
+      const auto result = future.result();
+      for (auto it = result.cbegin(); it != result.cend(); ++it) {
+        const auto& key = it.key();
+        if (wordsCounts.contains(key))
+          wordsCounts[key] = wordsCounts[key].toInt() + result[key].toInt();
+        else
+          wordsCounts[key] = result[key];
+      }
+    }
+
+    if (!isInterruptionRequested())
+      emit wordsCountsReady(wordsCounts);
+
+    in.seek(0);
   }
-  catch (...) {}
 }

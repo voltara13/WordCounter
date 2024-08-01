@@ -13,6 +13,24 @@ WordCounterController::~WordCounterController()
   abort();
 }
 
+QVariantList WordCounterController::GetHistogramList() const
+{
+  QVariantList list;
+
+  for (auto it = _histogram.begin(); it != _histogram.end(); ++it) {
+    QVariantMap entry;
+    entry["key"] = it.key();
+    entry["value"] = it.value();
+    list.append(entry);
+  }
+
+  std::sort(list.begin(), list.end(), [](const QVariant& iFirst, const QVariant& iSecond) {
+    return iFirst.toMap()["value"].toInt() > iSecond.toMap()["value"].toInt();
+  });
+
+  return list;
+}
+
 QUrl WordCounterController::GetFilePath() const
 {
   return _filePath;
@@ -56,6 +74,8 @@ void WordCounterController::SetIsCanceled(bool iNewIsCanceled)
     if (_workerThread && _workerThread->isRunning()) {
       _workerThread->requestInterruption();
       _workerThread->wait();
+
+      SetHistogram({});
     }
   }
   else {
@@ -68,8 +88,7 @@ void WordCounterController::SetIsCanceled(bool iNewIsCanceled)
         return;
       }
       connect(_workerThread, &WorkerThread::finished, _workerThread, &QObject::deleteLater);
-      connect(_workerThread, &WorkerThread::progressChanged, this, &WordCounterController::SetProgress);
-      connect(_workerThread, &WorkerThread::wordsCountsReady, this, &WordCounterController::SetWordsCount);
+      connect(_workerThread, &WorkerThread::wordsCountsReady, this, &WordCounterController::SetHistogram);
       _workerThread->start();
     }
   }
@@ -94,14 +113,12 @@ void WordCounterController::SetIsPaused(bool iNewIsPaused)
   emit isPausedChanged();
 }
 
-void WordCounterController::SetProgress(qreal iNewProgress)
+void WordCounterController::SetHistogram(QVariantMap iHistogram)
 {
-  _progress = iNewProgress;
+  if (_histogram == iHistogram)
+    return;
 
-  emit progressChanged();
-}
+  _histogram = iHistogram;
 
-void WordCounterController::SetWordsCount(const QMap<QString, int>& iWordsCount)
-{
-  qDebug() << iWordsCount;
+  emit histogramChanged();
 }

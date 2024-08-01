@@ -10,8 +10,7 @@ class WorkerThread: public QThread
   Q_OBJECT
 
 signals:
-  void progressChanged(qreal iProgress);
-  void wordsCountsReady(const QMap<QString, int>& iWordsMap);
+  void wordsCountsReady(QVariantMap iWordsMap);
 
 public:
   WorkerThread(const QString& iFilePath = "", QObject* ipParent = nullptr);

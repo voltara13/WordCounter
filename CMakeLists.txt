@@ -14,6 +14,7 @@ find_package(Qt${QT_VERSION_MAJOR}
         QuickControls2
         Widgets
         Core5Compat
+        Concurrent
 )
 qt_standard_project_setup()
 
@@ -51,7 +52,7 @@ qt_add_executable(TestApp
     ${PROJECT_SOURCES}
 )
 
-target_link_libraries(TestApp PRIVATE Qt6::QuickControls2 Qt6::Widgets Qt6::Core5Compat)
+target_link_libraries(TestApp PRIVATE Qt6::QuickControls2 Qt6::Widgets Qt6::Core5Compat Qt6::Concurrent)
 target_precompile_headers(TestApp PRIVATE Precompiled.h)
 
 if(QT_VERSION VERSION_GREATER_EQUAL 6.2)

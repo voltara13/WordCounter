@@ -29,12 +29,9 @@ ApplicationWindow {
             id: progressBar
 
             anchors.fill: parent
+            indeterminate: true
 
-            from: 0
-            to: 100
-
-            value: wordCounterController.progress
-            visible: !wordCounterController.isCanceled
+            visible: !wordCounterController.isCanceled && !wordCounterController.isPaused
         }
     }
 
