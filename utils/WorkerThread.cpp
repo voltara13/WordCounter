@@ -53,7 +53,7 @@ void WorkerThread::run()
       leftover.clear();
 
       // Check if the word in the block has been cut off
-      int lastValidPos = block.lastIndexOf(QRegularExpression("\\W"));
+      int lastValidPos = block.lastIndexOf(QRegularExpression(QString::fromLocal8Bit("[^\\wà-ÿÀ-ß¸¨]")));
       if (lastValidPos != -1 && lastValidPos != block.size() - 1) {
         leftover = block.mid(lastValidPos + 1);
         block = block.left(lastValidPos + 1);
@@ -70,7 +70,7 @@ void WorkerThread::run()
         QVariantMap localCounts;
         const auto lines = block.split(QRegularExpression("[\\r\\n]"), Qt::SkipEmptyParts);
         for (const auto& line : lines) {
-          const auto words = line.split(QRegularExpression("\\W+"), Qt::SkipEmptyParts);
+          const auto words = line.split(QRegularExpression(QString::fromLocal8Bit("[^\\wà-ÿÀ-ß¸¨]+")), Qt::SkipEmptyParts);
           for (const auto& word : words) {
             if (localCounts.contains(word.toLower()))
               localCounts[word.toLower()] = localCounts[word.toLower()].toInt() + 1;
